@@ -1,0 +1,76 @@
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  userName   String   @unique
+  password   String
+  userType   String
+  createdAt  DateTime @default(now())
+}
+
+model Student {
+  id             Int                @id @default(autoincrement())
+  academicNumber String             @unique
+  studentName    String
+  createdAt      DateTime           @default(now())
+  enrollments    CourseEnrollment[]
+  attendance     CourseAttendance[]
+}
+
+model Professor {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  courses   Course[]
+}
+
+model Course {
+  id           Int                @id @default(autoincrement())
+  courseName   String
+  professorId  Int
+  professor    Professor          @relation(fields: [professorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt    DateTime           @default(now())
+  sessions     CourseSession[]
+  enrollments  CourseEnrollment[]
+  attendance   CourseAttendance[]
+}
+
+model CourseSession {
+  id         Int                @id @default(autoincrement())
+  courseId   Int
+  course     Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sessionDate DateTime
+  startTime  DateTime?
+  endTime    DateTime?
+  topic      String?
+  attendance CourseAttendance[]
+  createdAt  DateTime           @default(now())
+}
+
+model CourseEnrollment {
+  id             Int      @id @default(autoincrement())
+  studentId      Int
+  courseId       Int
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course         Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollmentDate DateTime @default(now())
+}
+
+model CourseAttendance {
+  id           Int           @id @default(autoincrement())
+  studentId    Int
+  courseId     Int
+  sessionId    Int
+  student      Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: NoAction)
+  session      CourseSession @relation(fields: [sessionId], references: [id], onDelete: NoAction,onUpdate:NoAction)
+  sessionDate  DateTime
+}
